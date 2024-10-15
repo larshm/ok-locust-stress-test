@@ -11,5 +11,17 @@
                 "GEVENT_SUPPORT": "True"
             },
             "justMyCode": false
-        }]
+        },
+    {
+        "name": "Run locust",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "locust",
+        "args": [
+            "--worker"
+        ],
+        "console": "integratedTerminal",
+        "gevent": true,
+        "justMyCode": false
+    }]
 }

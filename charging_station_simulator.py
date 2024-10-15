@@ -4,6 +4,7 @@ import uuid
 import json
 import ssl
 import base64
+import websocket
 from locust import task
 from locust_plugins.users.socketio import SocketIOUser
 
@@ -38,11 +39,12 @@ class ChargingStationFlowTest(SocketIOUser):
         getConfigurationConf = self.receiveGetConfiguration()
         
         # sleep while sending heartbeats
-        self.sleep_with_heartbeat(10)
+        #self.sleep_with_heartbeat(10)
+        self.closeConnection()
 
     def sendBootNotification(self):
         bootNotificationMessageId = str(uuid.uuid4())
-        reqJson = f'[2, "{bootNotificationMessageId}", "BootNotification", {{"chargePointVendor": "Domo", "chargePointModel": "Testmodel", "firmwareVersion": "1.5.4", "meterSerialNumber": "SimulatedMeter"}}]'
+        reqJson = f'[2,"{bootNotificationMessageId}","BootNotification",{{"chargePointVendor": "Domo", "chargePointModel": "Testmodel", "firmwareVersion": "1.5.4", "meterSerialNumber": "SimulatedMeter"}}]'
         #self.ws.send(reqJson, websocket.ABNF.OPCODE_TEXT)
         self.send(reqJson, "send BootNotification")
 
@@ -50,6 +52,8 @@ class ChargingStationFlowTest(SocketIOUser):
             time.sleep(0.1)
         
         bootNotificationConf = self.MessageResponses.pop(bootNotificationMessageId)
+
+        print("Boot notification result: " + bootNotificationConf[2]["status"])
 
         return bootNotificationConf
 
@@ -59,7 +63,7 @@ class ChargingStationFlowTest(SocketIOUser):
         
         getConfigurationReq = self.MessageRequests.pop("GetConfiguration")
 
-        confJson = f'[3, "{getConfigurationReq[1]}", {{ "configurationKey": {{}}, "unknownKey": null }}]'
+        confJson = f'[3,"{getConfigurationReq[1]}",{{ "configurationKey": [], "unknownKey": null }}]'
         self.send(confJson, "receive GetConfiguration")
         #self.ws.send(confJson, websocket.ABNF.OPCODE_TEXT)
 
@@ -72,3 +76,15 @@ class ChargingStationFlowTest(SocketIOUser):
             self.MessageRequests[messageJson[2]] = messageJson
         elif messageJson[0] == 3: # response
             self.MessageResponses[messageJson[1]] = messageJson
+    
+    def closeConnection(self, context = {}):
+        self.environment.events.request.fire(
+            request_type="WSS",
+            name="Close websocket connection",
+            response_time=None,
+            response_length=0,
+            exception=None,
+            context={**self.context(), **context},
+        )
+
+        self.ws.close(websocket.STATUS_NORMAL)
