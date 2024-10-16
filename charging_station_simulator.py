@@ -13,15 +13,21 @@ ChargingStations = []
 class ChargingStationFlowTest(SocketIOUser):
 
     def __init__(self, parent):
+        print("init new user")
         super().__init__(parent)
-        self.chargingStation = ChargingStations.pop()
-
+    
     @task
     def charging_station_connect(self):
+        # only one user instance per charging station
+        if len(ChargingStations) > 0:
+            self.chargingStation = ChargingStations.pop()
+        else:
+            return
+
         self.MessageResponses = {}
         self.MessageRequests = {}
         
-        print("Connect to websocket")
+        print("Connect to websocket: " + self.chargingStation)
         
         authUsername = bytes(self.chargingStation + ":", "utf-8")
         authPassword = bytes.fromhex("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
@@ -29,7 +35,8 @@ class ChargingStationFlowTest(SocketIOUser):
 
         #self.connect("wss://iris-emobility.test.okcloud.dk/ws/00400", [], subprotocols=["ocpp1.6"], sslopt={"cert_reqs": ssl.CERT_NONE})
         #self.connect(f"wss://host.docker.internal:6003/ws/{self.chargingStation}", [], subprotocols=["ocpp1.6"], sslopt={"cert_reqs": ssl.CERT_NONE})
-        self.connect(f"wss://localhost:6003/ws/{self.chargingStation}", ["Authorization: Basic " + authString], subprotocols=["ocpp1.6"], sslopt={"cert_reqs": ssl.CERT_NONE})
+        self.connect(f"wss://host.docker.internal:6003/ws/{self.chargingStation}", ["Authorization: Basic " + authString], subprotocols=["ocpp1.6"], sslopt={"cert_reqs": ssl.CERT_NONE})
+        #self.connect(f"wss://localhost:6003/ws/{self.chargingStation}", ["Authorization: Basic " + authString], subprotocols=["ocpp1.6"], sslopt={"cert_reqs": ssl.CERT_NONE})
         #self.connect(f"wss://localhost:6003/ws/LARSTEST", [], subprotocols=["ocpp1.6"])
 
         print("send boot notification request")
@@ -39,8 +46,13 @@ class ChargingStationFlowTest(SocketIOUser):
         getConfigurationConf = self.receiveGetConfiguration()
         
         # sleep while sending heartbeats
-        #self.sleep_with_heartbeat(10)
+        print("heartbeat for 5 seconds: " + self.chargingStation)
+        self.sleep_with_heartbeat(5)
+        print("close connection: " + self.chargingStation)
         self.closeConnection()
+
+        # make charging station available to new test user
+        ChargingStations.append(self.chargingStation)
 
     def sendBootNotification(self):
         bootNotificationMessageId = str(uuid.uuid4())
@@ -87,4 +99,5 @@ class ChargingStationFlowTest(SocketIOUser):
             context={**self.context(), **context},
         )
 
-        self.ws.close(websocket.STATUS_NORMAL)
+        self.ws_greenlet.kill()
+        self.ws.close(1000, "going offline")
