@@ -5,6 +5,7 @@ from locust.runners import LocalRunner, MasterRunner, WorkerRunner
 
 def seed_users(environment, msg, **_kwargs):
     charging_station_simulator.ChargingStations.extend(map(lambda u: u["name"], msg.data))
+    print("Received charging station list: " + ", ".join(charging_station_simulator.ChargingStations))
     
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
