@@ -18,7 +18,7 @@
         "request": "launch",
         "module": "locust",
         "args": [
-            "--worker"
+            //"--worker"
         ],
         "console": "integratedTerminal",
         "gevent": true,
