@@ -4,17 +4,16 @@ loadtest:
   # loadtest.locust_locustfile -- the name of the locustfile
   locust_locustfile: locustfile.py
   # loadtest.locust_locustfile_path -- the path of the locustfile (without trailing backslash)
-  locust_locustfile_path: "/mnt/locust"
-  # loadtest.locust_locustfile_configmap -- name of a configmap containing your locustfile (default uses the example locustfile)
-  locust_locustfile_configmap: "locust-cso-locustfile"
-  # loadtest.locust_lib_configmap -- name of a configmap containing your lib (default uses the example lib)
-  locust_lib_configmap: "locust-cso-lib"
+  locust_locustfile_path: "/"
   # loadtest.locust_host -- the host you will load test
   locust_host: https://www.google.com
   # loadtest.pip_packages -- a list of extra python pip packages to install
-  pip_packages: ["websockets", "locust-plugins", "locust-plugins[websocket]"]
+  #pip_packages: ["websockets", "locust-plugins", "locust-plugins[websocket]"]
+  pip_packages: []
   # loadtest.environment -- environment variables used in the load test for both master and workers
-  environment: {}
+  environment: {
+    CSO_OCPP_BASEURL: "wss://localhost:6003/ws"
+  }
     # VAR: VALUE
   # loadtest.environment_secret -- environment variables used in the load test for both master and workers, stored as secrets
   environment_secret: {}
@@ -52,7 +51,7 @@ service:
 
 master:
   # master.image -- A custom docker image including tag
-  image: ""
+  image: "europe-west3-docker.pkg.dev/knp-emobility-prod/emobility/ok.emobility.cso.locust:latest"
   # master.logLevel -- Log level. Can be INFO or DEBUG
   logLevel: DEBUG
   # master.replicas -- Should be set to either 0 or 1.
@@ -74,9 +73,6 @@ master:
   environment: {}
   # master.args -- Any extra command args for the master
   args: []
-  command:
-    - sh
-    - /config/docker-entrypoint.sh
   strategy:
     type: RollingUpdate
   # master.pdb.enabled -- Whether to create a PodDisruptionBudget for the master pod
@@ -142,7 +138,7 @@ master:
 
 worker:
   # worker.image -- A custom docker image including tag
-  image: ""
+  image: "europe-west3-docker.pkg.dev/knp-emobility-prod/emobility/ok.emobility.cso.locust:latest"
   # worker.logLevel -- Log level. Can be INFO or DEBUG
   logLevel: DEBUG
   replicas: 19
@@ -171,9 +167,6 @@ worker:
   environment: {}
   # worker.args -- Any extra command args for the workers
   args: []
-  command:
-    - sh
-    - /config/docker-entrypoint.sh
   strategy:
     type: RollingUpdate
   # worker.restartPolicy -- worker pod's restartPolicy. Can be Always, OnFailure, or Never.

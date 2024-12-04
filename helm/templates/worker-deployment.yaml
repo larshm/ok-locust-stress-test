@@ -27,10 +27,6 @@ spec:
       {{- with .Values.worker.annotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-        checksum/config-locust-lib: {{ include (print $.Template.BasePath "/configmap-locust-lib.yaml") . | sha256sum }}
-        checksum/config-locust-locustfile: {{ include (print $.Template.BasePath "/configmap-locust-locustfile.yaml") . | sha256sum }}
-        checksum/config-config: {{ include (print $.Template.BasePath "/configmap-config.yaml") . | sha256sum }}
-        checksum/config-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
       labels:
         component: worker
         {{- include "locust.labels" . | nindent 8 }}
@@ -62,23 +58,6 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources:
 {{ toYaml .Values.worker.resources | indent 10 }}
-        volumeMounts:
-          {{- if .Values.loadtest.locust_locustfile_configmap}}
-          - name: locustfile
-            mountPath: "{{ .Values.loadtest.locust_locustfile_path }}"
-          {{- end }}
-          {{- if .Values.loadtest.locust_lib_configmap }}
-          - name: lib
-            mountPath: "{{ .Values.loadtest.locust_locustfile_path }}/lib"
-          {{- end }}
-          - name: config
-            mountPath: /config
-{{- if .Values.extraConfigMaps }}
-{{- range $key, $value := .Values.extraConfigMaps }}
-          - name: {{ $key }}
-            mountPath: {{ $value }}
-{{- end }}
-{{- end}}
 {{- if .Values.loadtest.mount_external_secret }}
 {{- include "locust.external_secret.volumemount" . | nindent 10 }}
 {{- end}}
@@ -122,27 +101,6 @@ spec:
 {{- end }}
 {{- end }}
       restartPolicy: {{ .Values.worker.restartPolicy }}
-      volumes:
-        {{- if .Values.loadtest.locust_lib_configmap }}
-        - name: lib
-          configMap:
-            name: {{ .Values.loadtest.locust_lib_configmap }}
-        {{- end }}
-        {{- if .Values.loadtest.locust_locustfile_configmap }}
-        - name: locustfile
-          configMap:
-            name: {{ .Values.loadtest.locust_locustfile_configmap }}
-        {{- end }}
-        - name: config
-          configMap:
-            name: {{ template "locust.fullname" . }}-config
-{{- if .Values.extraConfigMaps }}
-{{- range $key, $value := .Values.extraConfigMaps }}
-        - name: {{ $key }}
-          configMap:
-            name: {{ $key }}
-{{- end }}
-{{- end }}
 {{- if .Values.loadtest.mount_external_secret }}
 {{- include "locust.external_secret.volume" . | nindent 8 }}
 {{- end }}
