@@ -8,8 +8,6 @@ loadtest:
   # loadtest.locust_host -- the host you will load test
   locust_host: https://www.google.com
   # loadtest.pip_packages -- a list of extra python pip packages to install
-  #pip_packages: ["websockets", "locust-plugins", "locust-plugins[websocket]"]
-  pip_packages: []
   # loadtest.environment -- environment variables used in the load test for both master and workers
   environment: {
     CSO_OCPP_BASEURL: "wss://localhost:6003/ws"
@@ -32,12 +30,10 @@ loadtest:
   tags: ""
   # loadtest.excludeTags -- whether to run locust with `--exclude-tags [TAG [TAG ...]]` options, so only tasks with no matching tags will be executed
   excludeTags: ""
-  # loadtest.locustCmd -- The command to run Locust
-  locustCmd: "/opt/venv/bin/locust"
 
 image:
-  repository: locustio/locust
-  tag: 2.32.2
+  repository: "europe-west3-docker.pkg.dev/knp-emobility-prod/emobility/ok.emobility.cso.locust"
+  tag: latest 
   pullPolicy: IfNotPresent
 
 service:
@@ -51,7 +47,7 @@ service:
 
 master:
   # master.image -- A custom docker image including tag
-  image: "europe-west3-docker.pkg.dev/knp-emobility-prod/emobility/ok.emobility.cso.locust:latest"
+  image: ""
   # master.logLevel -- Log level. Can be INFO or DEBUG
   logLevel: DEBUG
   # master.replicas -- Should be set to either 0 or 1.
@@ -138,7 +134,7 @@ master:
 
 worker:
   # worker.image -- A custom docker image including tag
-  image: "europe-west3-docker.pkg.dev/knp-emobility-prod/emobility/ok.emobility.cso.locust:latest"
+  image: ""
   # worker.logLevel -- Log level. Can be INFO or DEBUG
   logLevel: DEBUG
   replicas: 19
